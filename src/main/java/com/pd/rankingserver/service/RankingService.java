@@ -31,7 +31,7 @@ public class RankingService {
     }
 
     public List<Score> getTop10() {
-        return scoreRepository.findTop10ByOrderByScoreDesc();
+        return scoreRepository.findAllByOrderByScoreDesc();
     }
 
     private String generateHash(String name, int score) {
