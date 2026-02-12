@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: ranking-server
+
+  datasource:
+    # localhost:3306 ??? ranking_game ??? ?????? ?
+    url: jdbc:mysql://localhost:3306/ranking_game?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: root
+    password: 9876
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      # update: ??? ?? ?? ???? ???? ??? ??? ????? (??!)
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect

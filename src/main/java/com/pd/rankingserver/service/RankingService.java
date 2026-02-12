@@ -14,7 +14,7 @@ public class RankingService {
 
     private final ScoreRepository scoreRepository;
     // 유니티와 똑같이 맞춰야 하는 비밀키
-    private static final String SECRET_KEY = "UnityMergeGameSecretKey2024!";
+    private static final String SECRET_KEY = "UnityMergeGameSecretKey2026!";
 
     public RankingService(ScoreRepository scoreRepository) {
         this.scoreRepository = scoreRepository;
