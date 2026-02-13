@@ -17,6 +17,12 @@ public class RankingController {
         this.rankingService = rankingService;
     }
 
+    // 서버 연결 확인용 API (Health Check)
+    @GetMapping("/api/health")
+    public String healthCheck() {
+        return "ok";
+    }
+
     // 데이터를 받을 껍데기 클래스 (DTO)
     @Getter @Setter
     static class ScoreRequest {
