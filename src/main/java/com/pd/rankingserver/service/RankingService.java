@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class RankingService {
@@ -22,12 +23,36 @@ public class RankingService {
 
     @Transactional
     public Score recordScore(String name, int score, String clientHash) {
-        // 서버에서 직접 해시를 만들어보고, 클라이언트 값과 비교
+        // 1. 보안 검증
         String serverHash = generateHash(name, score);
-        if (!serverHash.equals(clientHash)) {
-            throw new IllegalArgumentException("보안 경고: 데이터가 조작되었습니다.");
+        if (!serverHash.equals(clientHash)){
+            throw new IllegalArgumentException("보안 경고: 데이터 조작됨.");
         }
-        return scoreRepository.save(new Score(name, score));
+
+        // 2. 기존 유저 조회
+        Optional<Score> existingScore = scoreRepository.findByName(name);
+
+        if (existingScore.isPresent()){
+            // 이미 등록된 유저가 있는 경우
+            Score userScore = existingScore.get();
+
+            if (score > userScore.getScore()){
+                // 신기록인 경우에만 점수 갱신
+                userScore.setScore(score);
+                System.out.println("📈 [Update] 최고 기록 갱신: " + name + " (" + score + "점)");
+            } else {
+                // 기존 점수가 더 높거나 같으면 무시
+                System.out.println("🛡️ [Skip] 기존 기록이 더 높음: " + name);
+            }
+
+            return userScore;
+
+        } else {
+            // 신규 유저인 경우
+            Score newScore = new Score(name, score);
+            System.out.println("🆕 [Insert] 신규 유저 등록: " + name);
+            return scoreRepository.save(newScore);
+        }
     }
 
     public List<Score> getTop10() {
