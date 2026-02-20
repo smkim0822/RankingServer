@@ -1,5 +1,6 @@
 package com.pd.rankingserver.service;
 
+import com.pd.rankingserver.controller.ScoreRequestDto;
 import com.pd.rankingserver.domain.Score;
 import com.pd.rankingserver.repository.ScoreRepository;
 import org.springframework.stereotype.Service;
@@ -14,7 +15,6 @@ import java.util.Optional;
 public class RankingService {
 
     private final ScoreRepository scoreRepository;
-    // 유니티와 똑같이 맞춰야 하는 비밀키
     private static final String SECRET_KEY = "UnityMergeGameSecretKey2026!";
 
     public RankingService(ScoreRepository scoreRepository) {
@@ -22,35 +22,35 @@ public class RankingService {
     }
 
     @Transactional
-    public Score recordScore(String name, int score, String clientHash) {
-        // 1. 보안 검증
-        String serverHash = generateHash(name, score);
-        if (!serverHash.equals(clientHash)){
+    public Score recordScore(ScoreRequestDto dto) {
+        // 1. 보안 검증 (name + score + uuid + SECRET_KEY 순서)
+        String serverHash = generateHash(dto.getName(), dto.getScore(), dto.getUuid());
+        if (!serverHash.equals(dto.getHash())){
             throw new IllegalArgumentException("보안 경고: 데이터 조작됨.");
         }
 
-        // 2. 기존 유저 조회
-        Optional<Score> existingScore = scoreRepository.findByName(name);
+        // 2. UUID 기반 기존 유저 조회 (Upsert)
+        Optional<Score> existingScore = scoreRepository.findByUuid(dto.getUuid());
 
         if (existingScore.isPresent()){
-            // 이미 등록된 유저가 있는 경우
             Score userScore = existingScore.get();
+            // 닉네임은 변경되었을 수 있으므로 항상 최신화
+            userScore.setName(dto.getName());
 
-            if (score > userScore.getScore()){
-                // 신기록인 경우에만 점수 갱신
-                userScore.setScore(score);
-                System.out.println("📈 [Update] 최고 기록 갱신: " + name + " (" + score + "점)");
-            } else {
-                // 기존 점수가 더 높거나 같으면 무시
-                System.out.println("🛡️ [Skip] 기존 기록이 더 높음: " + name);
+            if (dto.getScore() > userScore.getScore()){
+                userScore.setScore(dto.getScore());
+                System.out.println("📈 [Update] 최고 기록 갱신: " + dto.getName() + " (" + dto.getScore() + "점)");
             }
-
             return userScore;
 
         } else {
-            // 신규 유저인 경우
-            Score newScore = new Score(name, score);
-            System.out.println("🆕 [Insert] 신규 유저 등록: " + name);
+            // 신규 유저 등록
+            Score newScore = Score.builder()
+                    .uuid(dto.getUuid())
+                    .name(dto.getName())
+                    .score(dto.getScore())
+                    .build();
+            System.out.println("🆕 [Insert] 신규 유저 등록: " + dto.getName());
             return scoreRepository.save(newScore);
         }
     }
@@ -59,8 +59,9 @@ public class RankingService {
         return scoreRepository.findAllByOrderByScoreDesc();
     }
 
-    private String generateHash(String name, int score) {
-        String input = name + score + SECRET_KEY;
+    private String generateHash(String name, int score, String uuid) {
+        // 유니티 RankingManager의 GenerateHash와 동일한 순서
+        String input = name + score + uuid + SECRET_KEY;
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] encodedhash = digest.digest(input.getBytes());

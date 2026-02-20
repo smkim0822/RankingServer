@@ -1,6 +1,7 @@
 package com.pd.rankingserver.domain;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -12,10 +13,16 @@ public class Score {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(unique = true, nullable = false)
+    private String uuid;
+
     private String name;
     private int score;
 
-    public Score(String name, int score) {
+    @Builder
+    public Score(String uuid, String name, int score) {
+        this.uuid = uuid;
         this.name = name;
         this.score = score;
     }

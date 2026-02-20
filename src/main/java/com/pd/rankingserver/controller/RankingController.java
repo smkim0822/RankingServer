@@ -2,8 +2,6 @@ package com.pd.rankingserver.controller;
 
 import com.pd.rankingserver.domain.Score;
 import com.pd.rankingserver.service.RankingService;
-import lombok.Getter;
-import lombok.Setter;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -17,24 +15,15 @@ public class RankingController {
         this.rankingService = rankingService;
     }
 
-    // 서버 연결 확인용 API (Health Check)
     @GetMapping("/api/health")
     public String healthCheck() {
         return "ok";
     }
 
-    // 데이터를 받을 껍데기 클래스 (DTO)
-    @Getter @Setter
-    static class ScoreRequest {
-        private String name;
-        private int score;
-        private String hash;
-    }
-
     @PostMapping("/api/scores")
-    public ResponseEntity<?> saveScore(@RequestBody ScoreRequest request) {
+    public ResponseEntity<?> saveScore(@RequestBody ScoreRequestDto request) {
         try {
-            Score savedScore = rankingService.recordScore(request.getName(), request.getScore(), request.getHash());
+            Score savedScore = rankingService.recordScore(request);
             return ResponseEntity.ok(savedScore);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
