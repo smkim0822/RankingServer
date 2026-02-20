@@ -30,8 +30,21 @@ public class RankingController {
         }
     }
 
+    // Top 50 랭킹 리스트 반환
     @GetMapping("/api/ranks")
-    public List<Score> getTop10Ranks() {
-        return rankingService.getTop10();
+    public List<Score> getTopRanks() {
+        return rankingService.getTop50();
+    }
+
+    // 내 랭킹 정보 조회 API
+    @GetMapping("/api/rankings/{uuid}")
+    public ResponseEntity<?> getMyRank(@PathVariable String uuid) {
+        MyRankResponseDto myRank = rankingService.getMyRank(uuid);
+
+        // 서버에 데이터가 없으면 404 반환
+        if (myRank == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(myRank);
     }
 }
