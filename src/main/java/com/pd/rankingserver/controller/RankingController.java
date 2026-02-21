@@ -20,7 +20,8 @@ public class RankingController {
         return "ok";
     }
 
-    @PostMapping("/api/scores")
+    // 점수 등록
+    @PostMapping("/api/rankings")
     public ResponseEntity<?> saveScore(@RequestBody ScoreRequestDto request) {
         try {
             Score savedScore = rankingService.recordScore(request);
@@ -30,8 +31,8 @@ public class RankingController {
         }
     }
 
-    // Top 50 랭킹 리스트 반환
-    @GetMapping("/api/ranks")
+    // Top 50 조회
+    @GetMapping("/api/rankings")
     public List<Score> getTopRanks() {
         return rankingService.getTop50();
     }
@@ -41,7 +42,6 @@ public class RankingController {
     public ResponseEntity<?> getMyRank(@PathVariable String uuid) {
         MyRankResponseDto myRank = rankingService.getMyRank(uuid);
 
-        // 서버에 데이터가 없으면 404 반환
         if (myRank == null) {
             return ResponseEntity.notFound().build();
         }
