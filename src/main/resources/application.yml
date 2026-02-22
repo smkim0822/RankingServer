@@ -4,9 +4,9 @@ spring:
 
   datasource:
     # localhost:3306 ??? ranking_game ??? ?????? ?
-    url: jdbc:mysql://localhost:3306/ranking_game?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-    username: root
-    password: 9876
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -18,3 +18,6 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.MySQLDialect
+
+ranking:
+  secret: ${RANKING_SECRET}
