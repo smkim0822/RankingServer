@@ -3,24 +3,31 @@
 ![Project Status](https://img.shields.io/badge/Status-Developing-yellow?style=flat-square) 
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-4.0.2-green?style=flat-square&logo=springboot)
 ![MySQL](https://img.shields.io/badge/MySQL-Database-blue?style=flat-square&logo=mysql)
+![Oracle Cloud](https://img.shields.io/badge/Infrastructure-Oracle_Cloud-F80000?style=flat-square&logo=oracle)
 
 ## 📝 프로젝트 소개
-모바일 하이퍼캐주얼 게임 **'Project Drop'**의 실시간 글로벌 랭킹을 처리하기 위한 Spring Boot 기반의 백엔드 API 서버입니다.
+모바일 하이퍼캐주얼 게임 **'Project Drop'**의 랭킹을 처리하는 Spring Boot 기반의 백엔드 API 서버입니다.
 클라이언트로부터 유저의 점수 데이터를 받아 무결성을 검증하고 저장하며, 전체 Top 50 랭킹 및 특정 유저의 개인 등수를 계산하여 제공합니다.
 
 ## ✨ 핵심 기능 (Key Features)
 * **REST API 기반 랭킹 서비스:** 클라이언트의 점수 등록(POST) 및 순위 조회(GET) 요청 처리.
 * **데이터 무결성 및 보안 검증:** UUID 기반 유저 식별 및 Hash 암호화 검증을 통한 비정상 점수 등록(조작) 차단.
 * **최고점 갱신 (Upsert) 로직:** 기존 유저의 기록 경신 시에만 점수를 업데이트하고, 닉네임은 항상 최신 상태로 동기화.
-* **트래픽 및 성능 최적화:** * 전체 랭킹 조회 시 상위 50위 데이터만 반환.
+* **트래픽 및 성능 최적화:**
+  * 전체 랭킹 조회 시 상위 50위 데이터만 반환.
   * 개인 등수 조회 시 전체 DB 정렬 대신 `countByScoreGreaterThan` 쿼리를 사용하여 서버 부하 최소화.
 
 ## 🛠️ 기술 스택 (Tech Stack)
 * **Framework:** Spring Boot 4.0.2
 * **Language:** Java 17
 * **Database:** MySQL, Spring Data JPA
+* **Infrastructure:** Oracle Cloud Infrastructure (OCI), Ubuntu 22.04 LTS
 
-## 🌐 API 명세서 (API Endpoints)
+## 🌐 배포 정보 (Deployment)
+* **API Base URL:** `http://158.179.164.153:8080`
+* **Status:** 가동 중 (24/7 백그라운드 실행)
+
+## 📁 API 명세서 (API Endpoints)
 | Method | URL | Description |
 |---|---|---|
 | `GET` | `/api/rankings` | 점수 내림차순 기준 Top 50 랭킹 리스트 조회 |
