@@ -4,9 +4,11 @@ import com.pd.rankingserver.controller.MyRankResponseDto;
 import com.pd.rankingserver.controller.ScoreRequestDto;
 import com.pd.rankingserver.domain.Score;
 import com.pd.rankingserver.repository.ScoreRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
@@ -16,7 +18,9 @@ import java.util.Optional;
 public class RankingService {
 
     private final ScoreRepository scoreRepository;
-    private static final String SECRET_KEY = "UnityMergeGameSecretKey2026!";
+
+    @Value("${ranking.secret}")
+    private String secretKey;
 
     public RankingService(ScoreRepository scoreRepository) {
         this.scoreRepository = scoreRepository;
@@ -25,7 +29,7 @@ public class RankingService {
     @Transactional
     public Score recordScore(ScoreRequestDto dto) {
         String serverHash = generateHash(dto.getName(), dto.getScore(), dto.getUuid());
-        if (!serverHash.equals(dto.getHash())){
+        if (!serverHash.equalsIgnoreCase(dto.getHash())){
             throw new IllegalArgumentException("보안 경고: 데이터 조작됨.");
         }
 
@@ -72,11 +76,11 @@ public class RankingService {
     }
 
     private String generateHash(String name, int score, String uuid) {
-        String input = name + score + uuid + SECRET_KEY;
+        String input = name + ":" + score + ":" + uuid + ":" + secretKey;
+        System.out.println("서버 원본 문자열: [" + input + "]");
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] encodedhash = digest.digest(input.getBytes());
-            StringBuilder hexString = new StringBuilder();
+            byte[] encodedhash = digest.digest(input.getBytes(StandardCharsets.UTF_8));StringBuilder hexString = new StringBuilder();
             for (byte b : encodedhash) {
                 String hex = Integer.toHexString(0xff & b);
                 if (hex.length() == 1) hexString.append('0');
