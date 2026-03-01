@@ -19,3 +19,11 @@ gradle-app.setting
 .project
 # JDT-specific (Eclipse Java Development Tools)
 .classpath
+.idea/gradle.xml
+.idea/misc.xml
+.idea/modules.xml
+.idea/RankingServer.iml
+.idea/RankingServer.iml
+.idea/modules.xml
+.idea/misc.xml
+.idea/gradle.xml
