@@ -5,6 +5,7 @@ import com.pd.rankingserver.service.RankingService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import com.pd.rankingserver.dto.NicknameUpdateDto;
 
 @RestController
 public class RankingController {
@@ -46,5 +47,15 @@ public class RankingController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(myRank);
+    }
+
+    // 이름 변경
+    @PatchMapping("/api/rankings/{uuid}/name")
+    public ResponseEntity<Void> updateNickname(
+            @PathVariable String uuid,
+            @RequestBody NicknameUpdateDto requestDto) {
+        rankingService.updateNickname(uuid, requestDto.getName());
+
+        return ResponseEntity.ok().build();
     }
 }

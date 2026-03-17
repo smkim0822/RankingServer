@@ -26,4 +26,8 @@ public class Score {
         this.name = name;
         this.score = score;
     }
+
+    public void  updateName(String newName){
+        this.name = newName;
+    }
 }
