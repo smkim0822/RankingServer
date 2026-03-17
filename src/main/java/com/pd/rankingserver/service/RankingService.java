@@ -91,4 +91,11 @@ public class RankingService {
             throw new RuntimeException("해시 생성 오류", e);
         }
     }
+
+    @Transactional
+    public void updateNickname(String uuid, String newName){
+        scoreRepository.findByUuid(uuid).ifPresent(score -> {
+            score.updateName(newName);
+        });
+    }
 }

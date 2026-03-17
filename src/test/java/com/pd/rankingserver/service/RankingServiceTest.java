@@ -1,10 +1,12 @@
 package com.pd.rankingserver.service;
 
+import com.pd.rankingserver.controller.ScoreRequestDto;
 import com.pd.rankingserver.domain.Score;
 import com.pd.rankingserver.repository.ScoreRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,23 +25,30 @@ class RankingServiceTest {
     @Autowired
     ScoreRepository scoreRepository;
 
-    // 테스트용 비밀키 (Service와 동일해야 함)
-    private static final String SECRET_KEY = "UnityMergeGameSecretKey2026!";
+    @Value("${ranking.secret}")
+    private String SECRET_KEY;
 
     @Test
     @DisplayName("1. 신규 유저 등록 -> 2. 더 높은 점수 갱신 -> 3. 낮은 점수 무시 확인")
     void testUpsertLogic() {
         // Given
         String username = "TestPlayer_Upsert";
+        String testUuid = "test-uuid-1234";
 
         // --- Step 1: 신규 유저 등록 (100점) ---
         int firstScore = 100;
         String hash1 = generateHash(username, firstScore);
 
-        rankingService.recordScore(username, firstScore, hash1);
+        ScoreRequestDto req1 = new ScoreRequestDto();
+        req1.setUuid(testUuid);
+        req1.setName(username);
+        req1.setScore(firstScore);
+        req1.setHash(hash1);
+
+        rankingService.recordScore(req1);
 
         // 검증: 100점으로 저장되었는가?
-        Score savedScore1 = scoreRepository.findByName(username).orElseThrow();
+        Score savedScore1 = scoreRepository.findByUuid(testUuid).orElseThrow();
         assertThat(savedScore1.getScore()).isEqualTo(100);
         System.out.println("✅ Step 1 통과: 신규 유저 등록 완료 (100점)");
 
@@ -47,10 +56,16 @@ class RankingServiceTest {
         int highScore = 200;
         String hash2 = generateHash(username, highScore);
 
-        rankingService.recordScore(username, highScore, hash2);
+        ScoreRequestDto req2 = new ScoreRequestDto();
+        req2.setUuid(testUuid);
+        req2.setName(username);
+        req2.setScore(highScore);
+        req2.setHash(hash2);
 
-        // 검증: 200점으로 변경되었는가?
-        Score savedScore2 = scoreRepository.findByName(username).orElseThrow();
+        rankingService.recordScore(req2);
+
+        // 검증: 200점으로 변경되었는가? (여기 findByName 남아있던 거 수정!)
+        Score savedScore2 = scoreRepository.findByUuid(testUuid).orElseThrow();
         assertThat(savedScore2.getScore()).isEqualTo(200);
         System.out.println("✅ Step 2 통과: 최고 점수 갱신 완료 (200점)");
 
@@ -58,10 +73,16 @@ class RankingServiceTest {
         int lowScore = 50;
         String hash3 = generateHash(username, lowScore);
 
-        rankingService.recordScore(username, lowScore, hash3);
+        ScoreRequestDto req3 = new ScoreRequestDto();
+        req3.setUuid(testUuid);
+        req3.setName(username);
+        req3.setScore(lowScore);
+        req3.setHash(hash3);
 
-        // 검증: 여전히 200점인가? (50점으로 바뀌면 안 됨)
-        Score savedScore3 = scoreRepository.findByName(username).orElseThrow();
+        rankingService.recordScore(req3);
+
+        // 검증: 여전히 200점인가?
+        Score savedScore3 = scoreRepository.findByUuid(testUuid).orElseThrow();
         assertThat(savedScore3.getScore()).isEqualTo(200);
         System.out.println("✅ Step 3 통과: 낮은 점수 무시 완료 (200점 유지)");
     }
