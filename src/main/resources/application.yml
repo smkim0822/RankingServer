@@ -22,3 +22,8 @@ spring:
 
 ranking:
   secret: ${RANKING_SECRET}
+  # OCI Always Free 회수(7일 누적 idle) 대비 백업 keep-alive 워크로드
+  keepalive:
+    enabled: true
+    cron: "0 0 4 * * *"
+    zone: "Asia/Seoul"
