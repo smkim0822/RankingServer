@@ -1,0 +1,37 @@
+[Unit]
+Description=Ranking Server (Project Drop)
+Documentation=https://github.com/romantic02/RankingServer
+After=network-online.target mysql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu
+
+# DB_URL / DB_USERNAME / DB_PASSWORD / RANKING_SECRET 등 운영 비밀은
+# /etc/ranking-server.env (chmod 600, root:root) 에 분리해 둔다.
+EnvironmentFile=/etc/ranking-server.env
+
+# Java 17 절대 경로. 다른 위치에 설치돼 있다면 `which java` 로 확인 후 수정.
+ExecStart=/usr/bin/java -jar /home/ubuntu/RankingServer-0.0.1-SNAPSHOT.jar
+
+# Spring Boot graceful shutdown 은 SIGTERM 으로 끝나며 종료 코드 143 을 반환할 수 있다.
+SuccessExitStatus=143
+TimeoutStopSec=30
+
+# 비정상 종료(OOM, 예외 등) 시 자동 재기동
+Restart=on-failure
+RestartSec=5s
+
+# 가벼운 sandboxing — RankingServer 는 홈 디렉토리 외 쓰기를 하지 않으므로 안전
+NoNewPrivileges=true
+PrivateTmp=true
+
+# 로그는 journald 로 흘려보낸다. 조회: `journalctl -u ranking-server -f`
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
