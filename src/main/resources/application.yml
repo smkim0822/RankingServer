@@ -1,6 +1,7 @@
 spring:
   application:
     name: ranking-server
+    version: 0.0.1-SNAPSHOT
 
   datasource:
     # localhost:3306 ??? ranking_game ??? ?????? ?
