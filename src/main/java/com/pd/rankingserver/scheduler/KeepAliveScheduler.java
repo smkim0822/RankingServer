@@ -10,8 +10,8 @@ import org.springframework.stereotype.Component;
 /**
  * OCI Always Free 회수 정책(7일 누적 idle) 대비 백업 keep-alive.
  *
- * <p>기본 트리거는 {@code Project-Drop} 저장소의 GitHub Actions 워크플로
- * (`keep-oci-alive.yml`)가 10분 간격으로 외부에서 /api/health를 ping하는 것이지만,
+ * <p>기본 트리거는 {@code Tap-Blast-Drop-Merge} 저장소의 GitHub Actions 워크플로
+ * ({@code keep-oci-alive.yml})가 10분 간격으로 외부에서 /api/health를 ping하는 것이지만,
  * Actions가 멈출 가능성(예: 토큰 만료, 사용자 의도로 비활성화, 외부 장애)에 대비해
  * 서버 자체에서도 1일 1회 가벼운 자가 워크로드를 돌린다.
  *
