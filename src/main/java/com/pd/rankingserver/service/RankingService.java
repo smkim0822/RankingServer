@@ -1,10 +1,13 @@
 package com.pd.rankingserver.service;
 
 import com.pd.rankingserver.controller.MyRankResponseDto;
+import com.pd.rankingserver.controller.RankingResponseDto;
 import com.pd.rankingserver.controller.ScoreRequestDto;
 import com.pd.rankingserver.domain.Score;
 import com.pd.rankingserver.repository.ScoreRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +19,8 @@ import java.util.Optional;
 
 @Service
 public class RankingService {
+
+    private static final Logger log = LoggerFactory.getLogger(RankingService.class);
 
     private final ScoreRepository scoreRepository;
 
@@ -30,6 +35,7 @@ public class RankingService {
     public Score recordScore(ScoreRequestDto dto) {
         String serverHash = generateHash(dto.getName(), dto.getScore(), dto.getUuid());
         if (!serverHash.equalsIgnoreCase(dto.getHash())){
+            log.warn("Score hash verification failed for uuid={}", dto.getUuid());
             throw new IllegalArgumentException("보안 경고: 데이터 조작됨.");
         }
 
@@ -55,8 +61,10 @@ public class RankingService {
     }
 
     // [수정] Top 50만 반환하도록 변경
-    public List<Score> getTop50() {
-        return scoreRepository.findTop50ByOrderByScoreDesc();
+    public List<RankingResponseDto> getTop50() {
+        return scoreRepository.findTop50ByOrderByScoreDesc().stream()
+                .map(score -> new RankingResponseDto(score.getName(), score.getScore()))
+                .toList();
     }
 
     // [추가] UUID 기반 내 랭킹 조회 로직
@@ -77,10 +85,10 @@ public class RankingService {
 
     private String generateHash(String name, int score, String uuid) {
         String input = name + ":" + score + ":" + uuid + ":" + secretKey;
-        System.out.println("서버 원본 문자열: [" + input + "]");
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] encodedhash = digest.digest(input.getBytes(StandardCharsets.UTF_8));StringBuilder hexString = new StringBuilder();
+            byte[] encodedhash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hexString = new StringBuilder();
             for (byte b : encodedhash) {
                 String hex = Integer.toHexString(0xff & b);
                 if (hex.length() == 1) hexString.append('0');

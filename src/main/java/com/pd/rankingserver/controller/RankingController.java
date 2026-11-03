@@ -72,7 +72,7 @@ public class RankingController {
 
     // Top 50 조회
     @GetMapping("/api/rankings")
-    public List<Score> getTopRanks() {
+    public List<RankingResponseDto> getTopRanks() {
         return rankingService.getTop50();
     }
 

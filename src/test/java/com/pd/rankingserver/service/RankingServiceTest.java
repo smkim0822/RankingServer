@@ -37,7 +37,7 @@ class RankingServiceTest {
 
         // --- Step 1: 신규 유저 등록 (100점) ---
         int firstScore = 100;
-        String hash1 = generateHash(username, firstScore);
+        String hash1 = generateHash(username, firstScore, testUuid);
 
         ScoreRequestDto req1 = new ScoreRequestDto();
         req1.setUuid(testUuid);
@@ -54,7 +54,7 @@ class RankingServiceTest {
 
         // --- Step 2: 더 높은 점수로 갱신 시도 (200점) ---
         int highScore = 200;
-        String hash2 = generateHash(username, highScore);
+        String hash2 = generateHash(username, highScore, testUuid);
 
         ScoreRequestDto req2 = new ScoreRequestDto();
         req2.setUuid(testUuid);
@@ -71,7 +71,7 @@ class RankingServiceTest {
 
         // --- Step 3: 낮은 점수로 요청 시도 (50점) ---
         int lowScore = 50;
-        String hash3 = generateHash(username, lowScore);
+        String hash3 = generateHash(username, lowScore, testUuid);
 
         ScoreRequestDto req3 = new ScoreRequestDto();
         req3.setUuid(testUuid);
@@ -88,8 +88,8 @@ class RankingServiceTest {
     }
 
     // 테스트용 해시 생성기
-    private String generateHash(String name, int score) {
-        String input = name + score + SECRET_KEY;
+    private String generateHash(String name, int score, String uuid) {
+        String input = name + ":" + score + ":" + uuid + ":" + SECRET_KEY;
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] encodedhash = digest.digest(input.getBytes());

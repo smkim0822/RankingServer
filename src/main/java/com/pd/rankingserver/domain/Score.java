@@ -7,6 +7,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
+@Table(indexes = {
+        @Index(name = "idx_score_score", columnList = "score")
+})
 @Getter @Setter
 @NoArgsConstructor
 public class Score {
