@@ -3,6 +3,7 @@ package com.pd.rankingserver.service;
 import com.pd.rankingserver.controller.MyRankResponseDto;
 import com.pd.rankingserver.controller.RankingResponseDto;
 import com.pd.rankingserver.controller.ScoreRequestDto;
+import com.pd.rankingserver.controller.ScoreResponseDto;
 import com.pd.rankingserver.domain.Score;
 import com.pd.rankingserver.repository.ScoreRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,7 +33,7 @@ public class RankingService {
     }
 
     @Transactional
-    public Score recordScore(ScoreRequestDto dto) {
+    public ScoreResponseDto recordScore(ScoreRequestDto dto) {
         String serverHash = generateHash(dto.getName(), dto.getScore(), dto.getUuid());
         if (!serverHash.equalsIgnoreCase(dto.getHash())){
             log.warn("Score hash verification failed for uuid={}", dto.getUuid());
@@ -48,7 +49,7 @@ public class RankingService {
             if (dto.getScore() > userScore.getScore()){
                 userScore.setScore(dto.getScore());
             }
-            return userScore;
+            return toResponseDto(userScore);
 
         } else {
             Score newScore = Score.builder()
@@ -56,8 +57,12 @@ public class RankingService {
                     .name(dto.getName())
                     .score(dto.getScore())
                     .build();
-            return scoreRepository.save(newScore);
+            return toResponseDto(scoreRepository.save(newScore));
         }
+    }
+
+    private ScoreResponseDto toResponseDto(Score score) {
+        return new ScoreResponseDto(score.getUuid(), score.getName(), score.getScore());
     }
 
     // [수정] Top 50만 반환하도록 변경
