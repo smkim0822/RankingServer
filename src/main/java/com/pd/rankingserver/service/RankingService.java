@@ -16,6 +16,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Service
@@ -107,8 +108,8 @@ public class RankingService {
 
     @Transactional
     public void updateNickname(String uuid, String newName){
-        scoreRepository.findByUuid(uuid).ifPresent(score -> {
-            score.updateName(newName);
-        });
+        Score score = scoreRepository.findByUuid(uuid)
+                .orElseThrow(() -> new NoSuchElementException("랭킹 정보를 찾을 수 없습니다: " + uuid));
+        score.updateName(newName);
     }
 }

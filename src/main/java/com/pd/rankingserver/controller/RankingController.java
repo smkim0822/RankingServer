@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.NoSuchElementException;
 import com.pd.rankingserver.dto.NicknameUpdateDto;
 
 @RestController
@@ -91,8 +92,12 @@ public class RankingController {
     @PatchMapping("/api/rankings/{uuid}/name")
     public ResponseEntity<Void> updateNickname(
             @PathVariable String uuid,
-            @RequestBody NicknameUpdateDto requestDto) {
-        rankingService.updateNickname(uuid, requestDto.getName());
+            @Valid @RequestBody NicknameUpdateDto requestDto) {
+        try {
+            rankingService.updateNickname(uuid, requestDto.getName());
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.notFound().build();
+        }
 
         return ResponseEntity.ok().build();
     }
