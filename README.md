@@ -24,7 +24,7 @@ Unity 클라이언트가 전송한 UUID, 닉네임, 점수를 검증하고 MySQL
 ```text
 Unity 클라이언트
   -> POST /api/rankings
-  -> ScoreRequestDto 매핑 및 @Valid 검증
+  -> ScoreRequestDto 매핑 및 @Valid 검증 (UUID 정규식, 닉네임, 음수 점수 방어)
   -> SHA-256 해시 검증 (위변조 차단)
   -> UUID 기반 기존 데이터 조회
   -> 신규 INSERT 또는 최고 점수만 UPDATE
@@ -38,18 +38,17 @@ Unity 클라이언트
 Unity 클라이언트
   -> GET /api/rankings
   -> score 내림차순 Top 50 정렬 조회
-  -> RankingResponseDto(name, score)로 내부 ID/UUID 은닉 후 반환
+  -> List<RankingResponseDto>로 반환 (개별 요소는 name, score만 포함해 내부 ID/UUID 은닉)
 ```
 
 ---
 
 ### 보안 검증 및 Upsert 로직
 
-- **데이터 수집 및 검증:** 클라이언트는 `uuid`, `name`, `score`, `hash`를 JSON으로 전송합니다. 해시는 사전 정의된 서명 규칙(`{name}:{score}:{uuid}:{RANKING_SECRET}`)으로 SHA-256을 계산하며, 검증 실패 요청은 저장하지 않고 `400 Bad Request`를 반환합니다.
+- **데이터 수집 및 입력 검증:** 클라이언트는 `uuid`, `name`, `score`, `hash`를 JSON으로 전송합니다. `@Valid`를 통해 UUID 형식(`@Pattern`), 닉네임(`@NotBlank`, `@Size`), 점수(`@NotNull`, `@Min(0)`), 해시(`@NotBlank`)를 검증하며, 위변조 방지를 위해 사전 정의된 서명 규칙(`{name}:{score}:{uuid}:{RANKING_SECRET}`)으로 SHA-256 해시 비교를 수행합니다.
 - **Upsert 처리 규칙:**
   - 신규 UUID: 새 레코드 `INSERT`
   - 기존 UUID: 닉네임 최신화 반영, 기존 최고 점수보다 높은 경우에만 `score` `UPDATE` (낮거나 같으면 유지)
-
 ---
 
 ### 데이터 모델링 (MySQL Schema)
@@ -59,7 +58,7 @@ Unity 클라이언트
 | `id` | BIGINT | PK, Auto Increment | 레코드 고유 식별자 |
 | `uuid` | VARCHAR(36) | Unique, Not Null | 클라이언트 디바이스 고유 ID |
 | `name` | VARCHAR(50) | Not Null | 사용자 닉네임 |
-| `score` | INT | Not Null, **Index** | 랭킹 점수 (B-Tree 인덱스 `idx_score_score` 적용) |
+| `score` | INT | Not Null, **Index** | 랭킹 점수 (`idx_score_score` 인덱스 적용) |
 
 ---
 
@@ -67,30 +66,30 @@ Unity 클라이언트
 
 Base path: `/api`
 
-| Method | Path | 설명 | HTTP Status | 주요 응답/요청 DTO |
-|---|---|---|---|---|
-| GET | `/health` | 클라이언트 헬스체크 응답 | `200 OK` | `"ok"` |
-| GET | `/health/detailed` | 서버 및 DB 상태 상세 조회 | `200 OK` | `HealthResponseDto` |
-| POST | `/rankings` | 점수 등록 또는 최고 점수 갱신 | `200 OK`, `400 Bad Request` | `ScoreRequestDto` / `ScoreResponseDto` |
-| GET | `/rankings` | 점수 내림차순 Top 50 | `200 OK` | `RankingResponseDto` |
-| GET | `/rankings/{uuid}` | 닉네임·점수·개인 순위 | `200 OK`, `404 Not Found` | `MyRankResponseDto` |
-| PATCH | `/rankings/{uuid}/name` | 닉네임 변경 | `200 OK`, `400 Bad Request`, `404 Not Found` | `NicknameUpdateDto` |
+| Method | Path | 설명 | HTTP Status | 요청 DTO | 응답 DTO / Body |
+|---|---|---|---|---|---|
+| GET | `/health` | 클라이언트 헬스체크 응답 | `200 OK` | 없음 | `String` (`"ok"`) |
+| GET | `/health/detailed` | 서버 및 DB 상태 상세 조회 | `200 OK` | 없음 | `HealthResponseDto` |
+| POST | `/rankings` | 점수 등록 또는 최고 점수 갱신 | `200 OK`, `400 Bad Request` | `ScoreRequestDto` | `ScoreResponseDto` |
+| GET | `/rankings` | 점수 내림차순 Top 50 | `200 OK` | 없음 | `List<RankingResponseDto>` |
+| GET | `/rankings/{uuid}` | 닉네임·점수·개인 순위 | `200 OK`, `404 Not Found` | PathVariable `uuid` | `MyRankResponseDto` |
+| PATCH | `/rankings/{uuid}/name` | 닉네임 변경 | `200 OK`, `400 Bad Request`, `404 Not Found` | `NicknameUpdateDto` | Void (Empty Body) |
 
 ---
 
 ## 주요 개선 및 트러블슈팅 (Troubleshooting)
 
 - **DB 스키마와 Entity 제약조건 동기화:** DB 컬럼 제약조건과 JPA Entity 설정 간 불일치로 인한 데이터 오염 가능성을 방지하기 위해 `Score` 엔티티 필드에 길이 제약 및 `@Column(nullable = false)`을 명시하여 스키마 정합성을 강화했습니다.
-- **API 입력 검증 및 예외 응답 표준화:** PATCH 닉네임 변경 API에 `@Valid`, `@NotBlank`, `@Size(max = 50)`을 선언해 무효 요청을 사전 차단하고, 존재하지 않는 UUID 조회 시 `404 Not Found` 상태 코드를 반환하도록 예외 처리를 표준화했습니다. (`curl` 클라이언트 검증 완료)
-- **DTO 패키지 구조 리팩토링 및 DTO 분리:** `controller` 패키지에 혼재하던 DTO들을 `com.pd.rankingserver.dto` 전용 패키지로 통합 이동하고, 랭킹 조회 시 외부 노출이 불필요한 내부 `id` 및 `uuid` 필드를 은닉한 `RankingResponseDto`를 응답 계약으로 분리했습니다.
-- **조회 성능 최적화 (B-Tree 인덱스 도입):** 단순 `ORDER BY score DESC` 정렬 시 데이터 누적으로 인한 성능 저하를 방지하고자 `score` 컬럼에 B-Tree 인덱스 (`idx_score_score`)를 선언하여 Top 50 정렬 및 범위 조회의 인덱스 활용 가능성을 보장했습니다.
+- **API 입력 검증 및 예외 응답 표준화:** Controller 계층에 `@Valid`를 배치하고 DTO별 입력 검증(`@NotBlank`, `@Size`, `@Pattern`, `@Min`)을 강화하여 유효하지 않은 요청을 사전 차단했습니다. 또한 존재하지 않는 UUID 조회 시 `404 Not Found` 상태 코드가 반환되도록 예외 처리를 표준화했습니다.
+- **DTO 패키지 구조 리팩토링 및 DTO 분리:** `controller` 패키지에 혼재하던 DTO들을 `com.pd.rankingserver.dto` 전용 패키지로 통합 이동하고, Top 50 랭킹 조회 시 외부 노출이 불필요한 내부 `id` 및 `uuid` 필드를 은닉한 `RankingResponseDto`를 응답 계약으로 분리했습니다.
+- **조회 성능 최적화 구조 마련 (B-Tree 인덱스 도입):** 단순 `ORDER BY score DESC` 정렬 시 데이터 누적으로 인한 성능 저하를 방지하고자 MySQL의 기본 B-Tree 인덱스로 활용되는 `score` 인덱스 (`idx_score_score`)를 선언하여 Top 50 정렬 및 범위 조회의 인덱스 활용 가능성을 확보했습니다.
 
 ---
 
 ## 향후 개선 과제
 
 - **Redis Sorted Set 기반 CQRS 검토:** 동시 접속 및 순위 계산 요청 증가 시 DB 정렬 연산 부담을 줄이기 위해 읽기 모델로 Redis Sorted Set(ZSET)을 도입하는 아키텍처 검토.
-- **SQL 윈도우 함수 기반 순위 계산:** 동점자 처리 및 효율적인 개인 순위 조회를 위해 MySQL 8.0 `RANK() OVER` 윈도우 함수 쿼리 적용 및 `EXPLAIN` 실행 계획 분석.
+- **SQL 윈도우 함수 기반 순위 계산 및 EXPLAIN 검증:** 동점자 처리 및 효율적인 개인 순위 조회를 위해 MySQL 8.0 `RANK() OVER` 윈도우 함수 쿼리 적용 및 `EXPLAIN` 실행 계획을 통한 실제 인덱스 타겟팅 성능 검증.
 
 ---
 
