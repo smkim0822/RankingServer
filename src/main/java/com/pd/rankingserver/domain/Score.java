@@ -17,10 +17,13 @@ public class Score {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
+    @Column(length = 36, unique = true, nullable = false)
     private String uuid;
 
+    @Column(length = 50, nullable = false)
     private String name;
+
+    @Column(nullable = false)
     private int score;
 
     @Builder

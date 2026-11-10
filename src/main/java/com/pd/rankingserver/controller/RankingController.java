@@ -1,11 +1,11 @@
 package com.pd.rankingserver.controller;
 
-import com.pd.rankingserver.domain.Score;
 import com.pd.rankingserver.repository.ScoreRepository;
 import com.pd.rankingserver.service.RankingService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.time.Instant;
 import java.util.List;
@@ -61,10 +61,10 @@ public class RankingController {
 
     // 점수 등록
     @PostMapping("/api/rankings")
-    public ResponseEntity<?> saveScore(@RequestBody ScoreRequestDto request) {
+    public ResponseEntity<?> saveScore(
+            @Valid @RequestBody ScoreRequestDto request) {
         try {
-            Score savedScore = rankingService.recordScore(request);
-            return ResponseEntity.ok(savedScore);
+            return ResponseEntity.ok(rankingService.recordScore(request));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
