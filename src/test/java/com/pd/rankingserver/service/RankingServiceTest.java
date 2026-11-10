@@ -1,6 +1,6 @@
 package com.pd.rankingserver.service;
 
-import com.pd.rankingserver.controller.ScoreRequestDto;
+import com.pd.rankingserver.dto.ScoreRequestDto;
 import com.pd.rankingserver.domain.Score;
 import com.pd.rankingserver.repository.ScoreRepository;
 import org.junit.jupiter.api.DisplayName;

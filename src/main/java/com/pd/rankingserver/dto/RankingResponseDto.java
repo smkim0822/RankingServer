@@ -1,4 +1,4 @@
-package com.pd.rankingserver.controller;
+package com.pd.rankingserver.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

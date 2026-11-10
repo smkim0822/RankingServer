@@ -1,9 +1,9 @@
 package com.pd.rankingserver.service;
 
-import com.pd.rankingserver.controller.MyRankResponseDto;
-import com.pd.rankingserver.controller.RankingResponseDto;
-import com.pd.rankingserver.controller.ScoreRequestDto;
-import com.pd.rankingserver.controller.ScoreResponseDto;
+import com.pd.rankingserver.dto.MyRankResponseDto;
+import com.pd.rankingserver.dto.RankingResponseDto;
+import com.pd.rankingserver.dto.ScoreRequestDto;
+import com.pd.rankingserver.dto.ScoreResponseDto;
 import com.pd.rankingserver.domain.Score;
 import com.pd.rankingserver.repository.ScoreRepository;
 import org.springframework.beans.factory.annotation.Value;

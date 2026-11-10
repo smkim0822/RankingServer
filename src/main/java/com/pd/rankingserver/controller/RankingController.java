@@ -1,5 +1,6 @@
 package com.pd.rankingserver.controller;
 
+import com.pd.rankingserver.dto.*;
 import com.pd.rankingserver.repository.ScoreRepository;
 import com.pd.rankingserver.service.RankingService;
 import org.springframework.beans.factory.annotation.Value;
@@ -10,7 +11,6 @@ import jakarta.validation.Valid;
 import java.time.Instant;
 import java.util.List;
 import java.util.NoSuchElementException;
-import com.pd.rankingserver.dto.NicknameUpdateDto;
 
 @RestController
 public class RankingController {
